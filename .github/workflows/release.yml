@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: ap-southeast-2
+  AWS_ENVIRONMENT: 825776426422
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: configure aws to get parameters
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - uses: AndyPoc/shared-gh-actions/.github/actions/cloudformation-deploy@v1
+        with:
+          region: ${{ env.REGION }}
+          template_file: dynamodb/template.yaml
+          service_name: dynamodb-tables
+          parameters_override: >
+            Alias=/dev/ddb-tables/alias
+            BucketName=dev-${{ env.AWS_ENVIRONMENT }}-bucket
